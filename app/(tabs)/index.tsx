@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Text,
   SafeAreaView,
@@ -10,13 +10,15 @@ import {
   FlatList,
 } from "react-native";
 
+import { BASE_URL } from "@/utils/config";
+
+import RestaurantItem from "@/components/restaurantItem";
+
 import "../../global.css";
 
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import EvilIcons from "@expo/vector-icons/EvilIcons";
-import Feather from "@expo/vector-icons/Feather";
 
 import SelectDropdown from "react-native-select-dropdown";
 
@@ -27,78 +29,6 @@ import {
   Restaurant,
 } from "@/types/restaurant";
 
-interface ItemProps {
-  item: {
-    title: string;
-    category: string;
-    location: string;
-    location2: string;
-    address: string;
-    description: string;
-  };
-}
-
-const testData2 = [
-  {
-    title: "La일락 성남모란본점",
-    category: "양식",
-    location: "경기도",
-    location2: "성남시",
-    address: "경기 성남시 중원구 성남동 3218",
-    description: "새우로제파스타 존맛집 여기 탑임",
-  },
-  {
-    title: "땡주",
-    category: "한식",
-    location: "경기도",
-    location2: "성남시",
-    address: "경기도 성남시 수정구 공원로339번길 36 1층",
-    description: "감자채전이 존맛 닭볶음탕보다는 고추장찌개 맛집",
-  },
-];
-
-const renderItemView = ({ item }: ItemProps) => {
-  const { title, category, location, location2, address, description } = item;
-  return (
-    <View className="rounded-2xl p-5 border border-gray-50 gap-4">
-      <View className="flex flex-row justify-between mb-2">
-        <Text
-          className="text-lg font-bold flex-1"
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {title}
-        </Text>
-        <View className="flex flex-row gap-2">
-          <TouchableOpacity className="w-8 h-8 bg-gray-100 justify-center items-center rounded-lg">
-            <Feather name="edit-2" size={16} color="black" />
-          </TouchableOpacity>
-          <TouchableOpacity className="w-8 h-8 bg-gray-100 justify-center items-center rounded-lg">
-            <Feather name="trash-2" size={16} color="black" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View className="flex flex-row mb-2 gap-2">
-        <View className="px-2 py-1 bg-black rounded-full">
-          <Text className="text-white text-xs">{category}</Text>
-        </View>
-        <View className="px-2 py-1 bg-gray-100 rounded-full">
-          <Text className="text-gray-600 text-xs ">{location}</Text>
-        </View>
-        <View className="px-2 py-1 bg-gray-100 rounded-full">
-          <Text className="text-gray-600 text-xs">{location2}</Text>
-        </View>
-      </View>
-      <Text className="mb-2">{address}</Text>
-      <Text>{description}</Text>
-      <View className="flex flex-row gap-2 items-center">
-        <EvilIcons name="location" size={16} color="black" />
-        <Text className="flex">탭하여 지도에서 보기</Text>
-      </View>
-    </View>
-  );
-};
-
 export default function HomeScreen() {
   const [regionData, setRegionData] = useState<[] | RegionData[]>([]);
   const [subRegionData, setSubRegionData] = useState<[] | RegionData[]>([]);
@@ -106,13 +36,17 @@ export default function HomeScreen() {
     []
   );
 
+  const [restaurantData, setRestaurantData] = useState<[] | Restaurant[]>([]);
+
   const [seatchText, setSearchText] = useState("");
 
   const [isGoodRestaurant, setIsGoodRestaurant] = useState(true);
 
-  const [selectedRegion, setSelectedRegion] = useState("");
-  const [selectedSubRegion, setSelectedSubRegion] = useState("");
-  const [selectedFoodCategory, setSelectedFoodCategory] = useState("");
+  const [selectedRegionId, setSelectedRegionId] = useState("");
+  const [selectedSubRegionId, setSelectedSubRegionId] = useState("");
+  const [selectedFoodCategoryId, setSelectedFoodCategoryId] = useState("");
+
+  const subDropdownRef = useRef<InstanceType<typeof SelectDropdown>>(null);
 
   const [restaurantsStatusCount, setRestaurantsStatusCount] =
     useState<restaurantsStatusCount>({ goodCount: 0, badCount: 0 });
@@ -138,7 +72,7 @@ export default function HomeScreen() {
     regionFetch();
   }, []);
 
-  useEffect(() => {}, [selectedRegion]);
+  useEffect(() => {}, [selectedRegionId]);
 
   useEffect(() => {
     const subRegionFetch = async () => {
@@ -147,10 +81,6 @@ export default function HomeScreen() {
           ? "http://10.0.2.2:3000"
           : "http://localhost:3000";
       try {
-        const selectedRegionId = regionData?.filter(
-          (item) => item?.name === selectedRegion
-        )[0]?.id;
-
         const res = await fetch(
           `${baseUrl}/api/regions/${selectedRegionId}/subregions`
         );
@@ -163,7 +93,7 @@ export default function HomeScreen() {
       }
     };
     subRegionFetch();
-  }, [selectedRegion]);
+  }, [selectedRegionId]);
 
   useEffect(() => {
     const foodCategoryFetch = async () => {
@@ -202,6 +132,22 @@ export default function HomeScreen() {
     };
     restaurantsStatusCountFetch();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log("이거가 env의 값" + BASE_URL);
+        const res = await fetch(`${BASE_URL}/api/restaurants/all`);
+        if (res.ok) {
+          const resJson = (await res.json()) as Restaurant[];
+          setRestaurantData(resJson);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
+  }, [selectedRegionId, selectedSubRegionId, selectedFoodCategoryId]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -250,7 +196,10 @@ export default function HomeScreen() {
           <View className="flex-1 ">
             <SelectDropdown
               data={regionData}
-              onSelect={(selectedItem) => setSelectedRegion(selectedItem?.name)}
+              onSelect={(selectedItem) => {
+                setSelectedRegionId(selectedItem?.id);
+                subDropdownRef.current?.reset();
+              }}
               renderButton={(selectedItem, isOpened) => {
                 return (
                   <View className="w-full h-10 bg-gray-50 rounded-lg text-sm px-3">
@@ -277,8 +226,11 @@ export default function HomeScreen() {
 
           <View className="flex-1 ">
             <SelectDropdown
+              ref={subDropdownRef}
               data={subRegionData}
-              onSelect={(selectedItem) => setSelectedSubRegion(selectedItem)}
+              onSelect={(selectedItem) =>
+                setSelectedSubRegionId(selectedItem?.id)
+              }
               renderButton={(selectedItem, isOpened) => {
                 return (
                   <View className="w-full h-10 bg-gray-50 rounded-lg text-sm px-3">
@@ -344,7 +296,9 @@ export default function HomeScreen() {
         <View className="mb-3">
           <SelectDropdown
             data={foodCategoryData}
-            onSelect={(selectedItem) => setFoodCategoryData(selectedItem)}
+            onSelect={(selectedItem) =>
+              setSelectedFoodCategoryId(selectedItem?.id)
+            }
             renderButton={(selectedItem, isOpened) => {
               return (
                 <View className="w-full h-10 bg-gray-50 rounded-lg text-sm px-3">
@@ -377,7 +331,10 @@ export default function HomeScreen() {
         </Text>
 
         <View className=" h-[300px] px-4 pb-4">
-          <FlatList data={testData2} renderItem={renderItemView}></FlatList>
+          <FlatList
+            data={restaurantData}
+            renderItem={RestaurantItem}
+          ></FlatList>
         </View>
 
         <View className="flex flex-row"></View>
