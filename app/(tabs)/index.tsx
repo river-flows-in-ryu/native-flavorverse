@@ -35,16 +35,16 @@ export default function HomeScreen() {
   const [foodCategoryData, setFoodCategoryData] = useState<[] | FoodCategory[]>(
     []
   );
-
   const [restaurantData, setRestaurantData] = useState<[] | Restaurant[]>([]);
 
-  const [seatchText, setSearchText] = useState("");
+  const [seartchText, setSearchText] = useState("");
+  const [debouncedSearchText, setDebouncedSearchText] = useState("");
 
   const [isGoodRestaurant, setIsGoodRestaurant] = useState(true);
 
-  const [selectedRegionId, setSelectedRegionId] = useState("");
-  const [selectedSubRegionId, setSelectedSubRegionId] = useState("");
-  const [selectedFoodCategoryId, setSelectedFoodCategoryId] = useState("");
+  const [selectedRegionId, setSelectedRegionId] = useState(null);
+  const [selectedSubRegionId, setSelectedSubRegionId] = useState(null);
+  const [selectedFoodCategoryId, setSelectedFoodCategoryId] = useState(null);
 
   const subDropdownRef = useRef<InstanceType<typeof SelectDropdown>>(null);
 
@@ -53,13 +53,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const regionFetch = async () => {
-      const baseUrl =
-        Platform.OS === "android"
-          ? "http://10.0.2.2:3000"
-          : "http://localhost:3000";
-
       try {
-        const res = await fetch(`${baseUrl}/api/regions`);
+        const res = await fetch(`${BASE_URL}/api/regions`);
         if (res?.ok) {
           const data = (await res.json()) as RegionData[];
           setRegionData(data);
@@ -76,13 +71,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const subRegionFetch = async () => {
-      const baseUrl =
-        Platform.OS === "android"
-          ? "http://10.0.2.2:3000"
-          : "http://localhost:3000";
       try {
         const res = await fetch(
-          `${baseUrl}/api/regions/${selectedRegionId}/subregions`
+          `${BASE_URL}/api/regions/${selectedRegionId}/subregions`
         );
         if (res?.ok) {
           const resJson = (await res.json()) as RegionData[];
@@ -97,12 +88,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const foodCategoryFetch = async () => {
-      const baseUrl =
-        Platform.OS === "android"
-          ? "http://10.0.2.2:3000"
-          : "http://localhost:3000";
       try {
-        const res = await fetch(`${baseUrl}/api/food-categories`);
+        const res = await fetch(`${BASE_URL}/api/food-categories`);
         if (res.ok) {
           const resJson = (await res.json()) as FoodCategory[];
           setFoodCategoryData(resJson);
@@ -116,12 +103,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const restaurantsStatusCountFetch = async () => {
-      const baseUrl =
-        Platform.OS === "android"
-          ? "http://10.0.2.2:3000"
-          : "http://localhost:3000";
       try {
-        const res = await fetch(`${baseUrl}/api/restaurants/count`);
+        const res = await fetch(`${BASE_URL}/api/restaurants/count`);
         if (res.ok) {
           const resJson = (await res.json()) as restaurantsStatusCount;
           setRestaurantsStatusCount(resJson);
@@ -134,10 +117,39 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchText(seartchText);
+    }, 500); // 디바운스 시간 조절 (ms)
+
+    return () => {
+      clearTimeout(timer); // 입력 중 타이머 초기화
+    };
+  }, [seartchText]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("이거가 env의 값" + BASE_URL);
-        const res = await fetch(`${BASE_URL}/api/restaurants/all`);
+        const queryParams = new URLSearchParams();
+
+        if (selectedRegionId) {
+          queryParams.append("regionId", String(selectedRegionId));
+        }
+        if (selectedSubRegionId) {
+          queryParams.append("subRegionId", String(selectedSubRegionId));
+        }
+        if (selectedFoodCategoryId) {
+          queryParams.append("foodCategoryId", String(selectedFoodCategoryId));
+        }
+        if (typeof isGoodRestaurant === "boolean") {
+          queryParams.append("isGood", isGoodRestaurant ? "true" : "false");
+        }
+        if (debouncedSearchText.trim()) {
+          queryParams.append("search", debouncedSearchText.trim());
+        }
+
+        const res = await fetch(
+          `${BASE_URL}/api/restaurants?${queryParams.toString()}`
+        );
         if (res.ok) {
           const resJson = (await res.json()) as Restaurant[];
           setRestaurantData(resJson);
@@ -147,7 +159,13 @@ export default function HomeScreen() {
       }
     };
     fetchData();
-  }, [selectedRegionId, selectedSubRegionId, selectedFoodCategoryId]);
+  }, [
+    selectedRegionId,
+    selectedSubRegionId,
+    selectedFoodCategoryId,
+    isGoodRestaurant,
+    debouncedSearchText,
+  ]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -167,7 +185,7 @@ export default function HomeScreen() {
         <View>
           <TextInput
             placeholder="맛집 이름, 주소, 설명으로 검색 "
-            value={seatchText}
+            value={seartchText}
             onChangeText={setSearchText}
             className="w-full h-12 relative border-none border-gray-100 bg-gray-50 rounded-lg px-12"
             spellCheck={false}
@@ -181,7 +199,7 @@ export default function HomeScreen() {
             <AntDesign name="search1" size={20} color="black" />
           </View>
 
-          {seatchText !== "" && (
+          {seartchText !== "" && (
             <TouchableOpacity
               className="absolute right-3 top-0 h-full justify-center"
               onPress={() => setSearchText("")}
