@@ -5,7 +5,7 @@ import { Restaurant } from "@/types/restaurant";
 import Feather from "@expo/vector-icons/Feather";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 
-const RestaurantItem = ({ item }: Restaurant) => {
+const RestaurantItem = ({ item }: { item: Restaurant }) => {
   const {
     name,
     address,

@@ -32,3 +32,9 @@ export interface Restaurant {
     name: string;
   };
 }
+
+export type RestaurantsApiResponse = {
+  restaurants: Restaurant[];
+  goodCount: number;
+  badCount: number;
+};
