@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Text,
-  SafeAreaView,
   StatusBar,
   View,
   Platform,
@@ -9,6 +8,10 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useRouter } from "expo-router";
 
 import { BASE_URL } from "@/utils/config";
 
@@ -27,6 +30,7 @@ import {
   FoodCategory,
   restaurantsStatusCount,
   Restaurant,
+  RestaurantsApiResponse,
 } from "@/types/restaurant";
 
 export default function HomeScreen() {
@@ -50,6 +54,8 @@ export default function HomeScreen() {
 
   const [restaurantsStatusCount, setRestaurantsStatusCount] =
     useState<restaurantsStatusCount>({ goodCount: 0, badCount: 0 });
+
+  const router = useRouter();
 
   useEffect(() => {
     const regionFetch = async () => {
@@ -151,8 +157,12 @@ export default function HomeScreen() {
           `${BASE_URL}/api/restaurants?${queryParams.toString()}`
         );
         if (res.ok) {
-          const resJson = (await res.json()) as Restaurant[];
-          setRestaurantData(resJson);
+          const resJson = (await res.json()) as RestaurantsApiResponse;
+          setRestaurantsStatusCount({
+            goodCount: resJson?.goodCount,
+            badCount: resJson?.badCount,
+          });
+          setRestaurantData(resJson?.restaurants);
         }
       } catch (error) {
         console.error(error);
@@ -178,7 +188,10 @@ export default function HomeScreen() {
       >
         <View className="flex flex-row justify-between items-center gap-3 py-4 border-b border-gray-100">
           <Text className=" text-2xl font-bold text-black">맛집 관리</Text>
-          <TouchableOpacity className="w-10 h-10 flex justify-center text-center items-center bg-black rounded-full">
+          <TouchableOpacity
+            className="w-10 h-10 flex justify-center text-center items-center bg-black rounded-full"
+            onPress={() => router.push("/restaurant/add")}
+          >
             <FontAwesome6 name="add" size={18} color="white" />
           </TouchableOpacity>
         </View>

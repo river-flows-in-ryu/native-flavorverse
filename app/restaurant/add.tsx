@@ -23,39 +23,6 @@ export default function Add() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    console.log(`${process.env.EXPO_PUBLIC_KAKAO_MAP_API_KEY}`);
-    const fetchTest = async () => {
-      const res = await fetch(
-        `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent("la일락")}`,
-        {
-          headers: {
-            Authorization: `KakaoAK ${process.env.EXPO_PUBLIC_KAKAO_MAP_API_KEY}`,
-          },
-        }
-      );
-      console.log(res);
-      const resJson = await res.json();
-      console.log(resJson);
-    };
-    fetchTest();
-  }, []);
-
-  useEffect(() => {
-    const foodCategoryFetch = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/api/food-categories`);
-        if (res.ok) {
-          const resJson = (await res.json()) as FoodCategory[];
-          setFoodCategoryData(resJson);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    foodCategoryFetch();
-  }, []);
-
   const { control, handleSubmit } = useForm({
     defaultValues: {
       name: "",
