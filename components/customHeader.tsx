@@ -7,7 +7,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 export default function CustomHeader({ title }: { title: string }) {
   const router = useRouter();
   return (
-    <View className="flex-row items-center p-4 bg-white ">
+    <View className="flex-row items-center p-4 bg-white border-b border-gray-100">
       <TouchableOpacity onPress={() => router.back()}>
         <AntDesign name="arrowleft" size={24} color="black"></AntDesign>
       </TouchableOpacity>

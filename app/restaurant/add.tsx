@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 import { useRouter } from "expo-router";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,15 +14,21 @@ import { useForm, Controller } from "react-hook-form";
 import SelectDropdown from "react-native-select-dropdown";
 
 import CustomHeader from "@/components/customHeader";
-
-import { BASE_URL } from "@/utils/config";
+import RestaurantListItem from "@/components/restaurant/restaurantListItem";
 
 import { FoodCategory } from "@/types/restaurant";
 
 import AntDesign from "@expo/vector-icons/AntDesign";
-import Feather from "@expo/vector-icons/Feather";
+import EvilIcons from "@expo/vector-icons/EvilIcons";
 
 export default function Add() {
+  const [searchText, setSearchText] = useState("");
+  const [debouncedSearchText, setDebouncedSearchText] = useState("");
+
+  const [isSearchVisible, setIsSearchVisible] = useState<boolean>(false);
+
+  const [restaurantData, setRestaurantData] = useState([]);
+
   const [foodCategoryData, setFoodCategoryData] = useState<[] | FoodCategory[]>(
     []
   );
@@ -31,6 +43,38 @@ export default function Add() {
   });
 
   const onSubmit = (data) => console.log(data);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchText(searchText);
+    }, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchText]);
+
+  useEffect(() => {
+    const kakaoKeywordSearch = async () => {
+      if (debouncedSearchText.length < 2) {
+        setRestaurantData([]);
+        return;
+      }
+
+      const res = await fetch(
+        `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(searchText)}`,
+        {
+          headers: {
+            Authorization: `KakaoAK ${process.env.EXPO_PUBLIC_KAKAO_MAP_API_KEY}`,
+          },
+        }
+      );
+      const resJson = await res.json();
+      // console.log(resJson);
+      setRestaurantData(resJson?.documents);
+    };
+    kakaoKeywordSearch();
+  }, [debouncedSearchText]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -50,7 +94,7 @@ export default function Add() {
               </View>
               <TextInput
                 placeholder="가게 이름을 입력하세요."
-                className="h-[50px px-4 py-3 border rounded-xl bg-gray-50"
+                className="h-[50px] px-4 py-3 rounded-xl bg-[#f9f9f9]"
                 onChangeText={onChange}
                 value={value}
               />
@@ -104,12 +148,63 @@ export default function Add() {
           <Text className="mr-2.5">주소</Text>
           <Text className="text-red-500">*</Text>
         </View>
-        <Pressable onPress={() => router?.push("/restaurant/search")}>
-          <View className="h-[50px] px-4 py-3 flex-row items-center justify-between border rounded-xl ">
-            <Text>주소를 검색하세요.</Text>
-            <Feather name="map-pin" size={12} color="black" />
+
+        <TouchableOpacity
+          onPress={() => setIsSearchVisible((prev: boolean) => !prev)}
+          className="h-[50px] px-4 py-3  rounded-xl bg-[#f9f9f9] mb-2.5"
+        ></TouchableOpacity>
+
+        {isSearchVisible && (
+          <View
+            className="w-full max-h-[350px] min-h-[150px] shadow-xl/30 rounded-xl px-2.5"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 3,
+              },
+              shadowOpacity: 0.27,
+              shadowRadius: 4.65,
+
+              elevation: 6,
+            }}
+          >
+            <View className="flex-row justify-center items-center bg-[#f9f9f9] rounded-xl h-[50px]">
+              <EvilIcons
+                name="search"
+                size={24}
+                color="black"
+                className="ml-3"
+              />
+              <TextInput
+                placeholder="검색어를 입력하세요"
+                className="flex-1 ml-3 "
+                value={searchText}
+                onChangeText={setSearchText}
+              />
+            </View>
+
+            <View className="h-px bg-gray-300 my-3" />
+            {debouncedSearchText.length === 0 ? (
+              <Text className="text-center text-gray-500 mt-4">
+                검색어를 입력해주세요
+              </Text>
+            ) : debouncedSearchText.length < 2 ? (
+              <Text className="text-center text-gray-500 mt-4">
+                2글자 이상 입력해주세요
+              </Text>
+            ) : restaurantData.length === 0 ? (
+              <Text className="text-center text-gray-500 mt-4">
+                검색 결과가 없습니다
+              </Text>
+            ) : (
+              <FlatList
+                data={restaurantData}
+                renderItem={({ item }) => <RestaurantListItem item={item} />}
+              />
+            )}
           </View>
-        </Pressable>
+        )}
       </View>
     </SafeAreaView>
   );
