@@ -38,3 +38,30 @@ export type RestaurantsApiResponse = {
   goodCount: number;
   badCount: number;
 };
+
+export interface KakaoKeywordSearchRestaurant {
+  address_name: string;
+  category_group_code: string;
+  category_group_name: string;
+  category_name: string;
+  distance: number;
+  id: string;
+  phone: string;
+  place_name: string;
+  place_url: string;
+  road_address_name: string;
+  x: string;
+  y: string;
+}
+
+export interface KakaoKeywordSearchResponse {
+  documents: KakaoKeywordSearchRestaurant[];
+}
+
+export interface formData {
+  address: string;
+  foodCategory: number;
+  isGoodRestaurant: boolean;
+  memo: string;
+  name: string;
+}
