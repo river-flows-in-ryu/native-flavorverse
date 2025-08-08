@@ -6,6 +6,8 @@ import {
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 
+import { Provider as PaperProvider } from "react-native-paper";
+
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
@@ -26,12 +28,14 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <SafeAreaProvider>
-        <SafeAreaView className="flex-1 bg-white">
-          <Slot />
-        </SafeAreaView>
-        <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />
-      </SafeAreaProvider>
+      <PaperProvider>
+        <SafeAreaProvider>
+          <SafeAreaView className="flex-1 bg-white">
+            <Slot />
+          </SafeAreaView>
+          <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />
+        </SafeAreaProvider>
+      </PaperProvider>
     </ThemeProvider>
   );
 }
