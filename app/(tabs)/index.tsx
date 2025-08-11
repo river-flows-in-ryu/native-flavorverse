@@ -9,13 +9,12 @@ import {
   FlatList,
 } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useRouter } from "expo-router";
 
 import { BASE_URL } from "@/utils/config";
 
 import RestaurantItem from "@/components/restaurantItem";
+import RestaurantDeleteDialog from "@/components/restaurantDeleteDialog";
 
 import "../../global.css";
 
@@ -54,6 +53,9 @@ export default function HomeScreen() {
 
   const [restaurantsStatusCount, setRestaurantsStatusCount] =
     useState<restaurantsStatusCount>({ goodCount: 0, badCount: 0 });
+
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const router = useRouter();
 
@@ -177,9 +179,45 @@ export default function HomeScreen() {
     debouncedSearchText,
   ]);
 
+  const handleClickDelete = (id: number) => {
+    setDeleteTargetId(id);
+    setIsDialogVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTargetId !== null) {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/restaurants/${deleteTargetId}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (res.ok) {
+          setRestaurantData((prev) =>
+            prev.filter((r) => r.id !== deleteTargetId)
+          );
+          setIsDialogVisible(false);
+          setDeleteTargetId(null);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  const hideDialog = () => setIsDialogVisible(false);
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1">
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+
+      {isDialogVisible && (
+        <RestaurantDeleteDialog
+          hideDialog={hideDialog}
+          confirmDelete={confirmDelete}
+        />
+      )}
       <View
         className="flex-1 px-4"
         style={{
@@ -364,12 +402,17 @@ export default function HomeScreen() {
         <View className=" h-[300px] px-4 pb-4">
           <FlatList
             data={restaurantData}
-            renderItem={RestaurantItem}
+            renderItem={({ item }) => (
+              <RestaurantItem
+                item={item}
+                onDelete={() => handleClickDelete(item.id)}
+              />
+            )}
           ></FlatList>
         </View>
 
         <View className="flex flex-row"></View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

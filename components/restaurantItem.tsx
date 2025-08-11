@@ -5,7 +5,13 @@ import { Restaurant } from "@/types/restaurant";
 import Feather from "@expo/vector-icons/Feather";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 
-const RestaurantItem = ({ item }: { item: Restaurant }) => {
+const RestaurantItem = ({
+  item,
+  onDelete,
+}: {
+  item: Restaurant;
+  onDelete: () => void;
+}) => {
   const {
     name,
     address,
@@ -29,7 +35,10 @@ const RestaurantItem = ({ item }: { item: Restaurant }) => {
           <TouchableOpacity className="w-8 h-8 bg-gray-100 justify-center items-center rounded-lg">
             <Feather name="edit-2" size={16} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity className="w-8 h-8 bg-gray-100 justify-center items-center rounded-lg">
+          <TouchableOpacity
+            onPress={onDelete}
+            className="w-8 h-8 bg-gray-100 justify-center items-center rounded-lg"
+          >
             <Feather name="trash-2" size={16} color="black" />
           </TouchableOpacity>
         </View>
