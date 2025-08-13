@@ -256,7 +256,7 @@ export default function HomeScreen() {
           <Text className=" text-2xl font-bold text-black">맛집 관리</Text>
           <TouchableOpacity
             className="w-10 h-10 flex justify-center text-center items-center bg-black rounded-full"
-            onPress={() => router.push("/restaurant/add")}
+            onPress={() => router.push("/restaurant/form")}
           >
             <FontAwesome6 name="add" size={18} color="white" />
           </TouchableOpacity>
