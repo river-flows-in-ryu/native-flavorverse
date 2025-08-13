@@ -8,28 +8,42 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { RegionData } from "@/types/restaurant";
 
 interface Props {
-  regionData: RegionData[];
-  setSelectedRegionId: React.Dispatch<React.SetStateAction<number | null>>;
-  subRegionData: RegionData[];
-  setSelectedSubRegionId: React.Dispatch<React.SetStateAction<number | null>>;
+  regionFilterProps: {
+    regionData: RegionData[];
+    setSelectedRegionId: React.Dispatch<React.SetStateAction<number | null>>;
+    subRegionData: RegionData[];
+    setSelectedSubRegionId: React.Dispatch<React.SetStateAction<number | null>>;
+    selectedRegionId: number | null;
+    subRegionDropdownRef: React.RefObject<InstanceType<
+      typeof SelectDropdown
+    > | null>;
+  };
 }
 
-export default function RegionFilter({
-  regionData,
-  setSelectedRegionId,
-  subRegionData,
-  setSelectedSubRegionId,
-}: Props) {
-  const subDropdownRef = useRef<InstanceType<typeof SelectDropdown>>(null);
+export default function RegionFilter({ regionFilterProps }: Props) {
+  const {
+    regionData,
+    setSelectedRegionId,
+    subRegionData,
+    setSelectedSubRegionId,
+    selectedRegionId,
+    subRegionDropdownRef,
+  } = regionFilterProps;
 
   return (
     <View className="flex flex-row gap-3">
       <View className="flex-1 ">
         <SelectDropdown
+          key={selectedRegionId ?? "default"}
           data={regionData}
+          defaultValue={
+            selectedRegionId
+              ? regionData.find((item) => item.id === selectedRegionId)
+              : null
+          }
           onSelect={(selectedItem) => {
-            setSelectedRegionId(selectedItem?.id);
-            subDropdownRef.current?.reset();
+            setSelectedRegionId(selectedItem?.id ?? null);
+            subRegionDropdownRef.current?.reset();
           }}
           renderButton={(selectedItem, isOpened) => {
             return (
@@ -57,7 +71,7 @@ export default function RegionFilter({
 
       <View className="flex-1 ">
         <SelectDropdown
-          ref={subDropdownRef}
+          ref={subRegionDropdownRef}
           data={subRegionData}
           onSelect={(selectedItem) => setSelectedSubRegionId(selectedItem?.id)}
           renderButton={(selectedItem, isOpened) => {

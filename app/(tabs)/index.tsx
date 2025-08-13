@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Text,
   StatusBar,
@@ -9,6 +9,8 @@ import {
 } from "react-native";
 
 import { useRouter } from "expo-router";
+
+import SelectDropdown from "react-native-select-dropdown";
 
 import { BASE_URL } from "@/utils/config";
 
@@ -30,6 +32,8 @@ import SearchBar from "./components/searchBar";
 import RegionFilter from "./components/regionFilter";
 import TasteFilterToggle from "./components/tasteFilterToggle";
 import FoodCategorySelector from "./components/foodCategorySelector";
+
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 export default function HomeScreen() {
   const [regionData, setRegionData] = useState<[] | RegionData[]>([]);
@@ -57,6 +61,13 @@ export default function HomeScreen() {
 
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
+  const regionDropdownRef = useRef<InstanceType<typeof SelectDropdown>>(null);
+  const subRegionDropdownRef =
+    useRef<InstanceType<typeof SelectDropdown>>(null);
+
+  const foodCategoryDropdownRef =
+    useRef<InstanceType<typeof SelectDropdown>>(null);
 
   const router = useRouter();
 
@@ -185,6 +196,16 @@ export default function HomeScreen() {
     setIsDialogVisible(true);
   };
 
+  const regionFilterProps = {
+    regionData,
+    setSelectedRegionId,
+    subRegionData,
+    setSelectedSubRegionId,
+    selectedRegionId,
+    regionDropdownRef,
+    subRegionDropdownRef,
+  };
+
   const confirmDelete = async () => {
     if (deleteTargetId !== null) {
       try {
@@ -208,6 +229,12 @@ export default function HomeScreen() {
   };
 
   const hideDialog = () => setIsDialogVisible(false);
+
+  const isShowResetButton =
+    searchText !== "" ||
+    selectedRegionId !== null ||
+    selectedSubRegionId !== null ||
+    selectedFoodCategoryId !== null;
 
   return (
     <View className="flex-1">
@@ -237,14 +264,29 @@ export default function HomeScreen() {
 
         <SearchBar searchText={searchText} setSearchText={setSearchText} />
 
+        {isShowResetButton && (
+          <View className="flex-row justify-end my-2.5">
+            <TouchableOpacity
+              onPress={() => {
+                setSearchText("");
+                setSelectedRegionId(null);
+                setSelectedSubRegionId(null);
+                setSelectedFoodCategoryId(null);
+                regionDropdownRef.current?.reset();
+                subRegionDropdownRef.current?.reset();
+                foodCategoryDropdownRef.current?.reset();
+              }}
+              className="flex-row justify-center items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-lg "
+            >
+              <AntDesign name="close" size={14} color="black" />
+              <Text className="text-gray-600 text-sm">필터 초기화</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View className="h-[1px] bg-gray-200 my-2.5 w-full" />
 
-        <RegionFilter
-          regionData={regionData}
-          setSelectedRegionId={setSelectedRegionId}
-          subRegionData={subRegionData}
-          setSelectedSubRegionId={setSelectedSubRegionId}
-        />
+        <RegionFilter regionFilterProps={regionFilterProps} />
 
         <View className="h-[1px] bg-gray-200 my-2.5 w-full" />
 
@@ -257,6 +299,7 @@ export default function HomeScreen() {
         <FoodCategorySelector
           foodCategoryData={foodCategoryData}
           setSelectedFoodCategoryId={setSelectedFoodCategoryId}
+          foodCategoryDropdownRef={foodCategoryDropdownRef}
         />
         <Text className="text-sm text-gray-500 mb-2">
           총 0개의 결과 (페이지 0/0)

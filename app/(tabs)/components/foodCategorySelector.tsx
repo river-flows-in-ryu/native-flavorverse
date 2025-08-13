@@ -10,15 +10,20 @@ import { FoodCategory } from "@/types/restaurant";
 interface Props {
   foodCategoryData: FoodCategory[];
   setSelectedFoodCategoryId: (id: number) => void;
+  foodCategoryDropdownRef: React.RefObject<InstanceType<
+    typeof SelectDropdown
+  > | null>;
 }
 
 export default function FoodCategorySelector({
   foodCategoryData,
   setSelectedFoodCategoryId,
+  foodCategoryDropdownRef,
 }: Props) {
   return (
     <View className="mb-3">
       <SelectDropdown
+        ref={foodCategoryDropdownRef}
         data={foodCategoryData}
         onSelect={(selectedItem) => setSelectedFoodCategoryId(selectedItem?.id)}
         renderButton={(selectedItem, isOpened) => {
