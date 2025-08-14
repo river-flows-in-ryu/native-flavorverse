@@ -9,11 +9,13 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 interface Props {
   control: Control<formData>;
   foodCategoryData: [] | FoodCategory[];
+  isEdit: boolean;
 }
 
 export default function FoodCategorySelector({
   control,
   foodCategoryData,
+  isEdit,
 }: Props) {
   return (
     <Controller
@@ -29,6 +31,9 @@ export default function FoodCategorySelector({
           <SelectDropdown
             data={foodCategoryData}
             onSelect={(selectedItem) => onChange(selectedItem?.id)}
+            defaultValue={
+              isEdit ? foodCategoryData.find((item) => item.id === value) : null
+            }
             renderButton={(selectedItem, isOpened) => {
               return (
                 <>

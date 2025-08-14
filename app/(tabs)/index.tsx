@@ -90,6 +90,7 @@ export default function HomeScreen() {
   useEffect(() => {}, [selectedRegionId]);
 
   useEffect(() => {
+    if (selectedRegionId === null) return;
     const subRegionFetch = async () => {
       try {
         const res = await fetch(

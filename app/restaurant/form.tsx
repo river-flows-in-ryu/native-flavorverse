@@ -9,6 +9,7 @@ import {
 } from "react-native";
 
 import { useForm } from "react-hook-form";
+import { useLocalSearchParams } from "expo-router";
 
 import CustomHeader from "@/components/customHeader";
 
@@ -17,24 +18,59 @@ import { BASE_URL } from "@/utils/config";
 import {
   FoodCategory,
   KakaoKeywordSearchRestaurant,
+  Restaurant,
   formData,
 } from "@/types/restaurant";
 
-import IsGoodRestaurantSelector from "@/app/restaurant/components/form/isGoodRestaurantSelector";
-import RestaurantNameInput from "@/app/restaurant/components/form/restaurantNameInput";
-import FoodCategorySelector from "@/app/restaurant/components/form/foodCategorySelector";
-import MemoInput from "@/app/restaurant/components/form/memoInput";
-import AddressInput from "@/app/restaurant/components/form/addressInput";
+import IsGoodRestaurantSelector from "./components/form/isGoodRestaurantSelector";
+import RestaurantNameInput from "./components/form/restaurantNameInput";
+import FoodCategorySelector from "./components/form/foodCategorySelector";
+import MemoInput from "./components/form/memoInput";
+import AddressInput from "./components/form/addressInput";
 
-export default function Add() {
+export default function Form() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const isEdit = Boolean(id);
+
   const [foodCategoryData, setFoodCategoryData] = useState<[] | FoodCategory[]>(
     []
   );
 
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<null | KakaoKeywordSearchRestaurant>(null);
 
-  // console.log(selectedRestaurant);
+  const {
+    address,
+    category,
+    categoryId,
+    memo,
+    name,
+    region,
+    status,
+    subregion,
+  } = restaurant || {};
+
+  const categoryName = category?.name;
+  const regionName = region?.name;
+  const subRegionName = subregion?.name;
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchRestaurantById = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/restaurants/${id}`);
+        if (res.ok) {
+          const resJson = (await res.json()) as Restaurant;
+          setRestaurant(resJson);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchRestaurantById();
+  }, [id, isEdit]);
 
   const {
     control,
@@ -42,18 +78,31 @@ export default function Add() {
     setError,
     clearErrors,
     formState: { errors },
+    reset,
   } = useForm({
     defaultValues: {
-      name: "",
-      foodCategory: 0,
-      isGoodRestaurant: true,
-      memo: "",
-      address: "",
+      name: isEdit ? name || "" : "",
+      foodCategory: isEdit ? categoryId || 0 : 0,
+      isGoodRestaurant: isEdit ? status === "GOOD" : true,
+      memo: isEdit ? memo || "" : "",
+      address: isEdit ? address || "" : "",
     },
   });
 
+  useEffect(() => {
+    if (restaurant) {
+      reset({
+        name: name,
+        foodCategory: categoryId,
+        isGoodRestaurant: restaurant.status === "GOOD",
+        memo: memo,
+        address: address,
+      });
+    }
+  }, [restaurant, reset, name, categoryId, memo, address]);
+
   const onSubmit = async (formData: formData) => {
-    if (!selectedRestaurant) {
+    if (!selectedRestaurant && !isEdit) {
       setError("address", {
         type: "manual",
         message: "식당을 선택해주세요",
@@ -65,15 +114,21 @@ export default function Add() {
       ...formData,
       region1: addressParts[0],
       region2: addressParts[1],
-      address: selectedRestaurant?.address_name,
+      address: selectedRestaurant?.address_name || address,
     };
 
     try {
-      const res = await fetch(`${BASE_URL}/api/restaurants/`, {
+      const url = isEdit
+        ? `${BASE_URL}/api/restaurants/${id}`
+        : `${BASE_URL}/api/restaurants/`;
+
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
         },
-        method: "POST",
+        method,
         body: JSON.stringify(data),
       });
 
@@ -106,7 +161,8 @@ export default function Add() {
     }
   }, [selectedRestaurant]);
 
-  const addressParts = selectedRestaurant?.address_name?.split(" ") || [];
+  const addressParts =
+    (selectedRestaurant?.address_name || address || "").split(" ") || [];
 
   return (
     <View className="flex-1">
@@ -127,6 +183,7 @@ export default function Add() {
           <RestaurantNameInput control={control} />
 
           <FoodCategorySelector
+            isEdit={isEdit}
             control={control}
             foodCategoryData={foodCategoryData}
           />
@@ -135,6 +192,7 @@ export default function Add() {
             selectedRestaurant={selectedRestaurant}
             setSelectedRestaurant={setSelectedRestaurant}
             errors={errors}
+            address={address}
           />
 
           <MemoInput control={control} />

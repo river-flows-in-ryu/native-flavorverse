@@ -20,12 +20,14 @@ interface Props {
     React.SetStateAction<KakaoKeywordSearchRestaurant | null>
   >;
   errors: any;
+  address?: string;
 }
 
 export default function AddressInput({
   selectedRestaurant,
   setSelectedRestaurant,
   errors,
+  address,
 }: Props) {
   const [isSearchVisible, setIsSearchVisible] = useState<boolean>(false);
 
@@ -95,7 +97,7 @@ export default function AddressInput({
           onPress={() => setIsSearchVisible((prev: boolean) => !prev)}
           className="flex-row items-center h-[50px] px-4 py-3  rounded-xl bg-[#f9f9f9] mb-2.5"
         >
-          <Text>{selectedRestaurant?.address_name || ""}</Text>
+          <Text>{selectedRestaurant?.address_name || address || ""}</Text>
         </TouchableOpacity>
 
         {isSearchVisible && (

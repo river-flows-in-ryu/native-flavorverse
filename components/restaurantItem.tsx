@@ -4,6 +4,7 @@ import { Restaurant } from "@/types/restaurant";
 
 import Feather from "@expo/vector-icons/Feather";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
+import { useRouter } from "expo-router";
 
 const RestaurantItem = ({
   item,
@@ -13,6 +14,7 @@ const RestaurantItem = ({
   onDelete: () => void;
 }) => {
   const {
+    id,
     name,
     address,
     memo,
@@ -20,6 +22,8 @@ const RestaurantItem = ({
     region: { name: regionName } = {},
     subregion: { name: subRegionName } = {},
   } = item;
+
+  const router = useRouter();
 
   return (
     <View className="rounded-2xl p-5 border border-gray-50 gap-4">
@@ -32,7 +36,10 @@ const RestaurantItem = ({
           {name}
         </Text>
         <View className="flex flex-row gap-2">
-          <TouchableOpacity className="w-8 h-8 bg-gray-100 justify-center items-center rounded-lg">
+          <TouchableOpacity
+            onPress={() => router.push(`/restaurant/form?id=${id}`)}
+            className="w-8 h-8 bg-gray-100 justify-center items-center rounded-lg"
+          >
             <Feather name="edit-2" size={16} color="black" />
           </TouchableOpacity>
           <TouchableOpacity
