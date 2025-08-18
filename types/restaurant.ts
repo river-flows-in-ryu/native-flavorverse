@@ -64,4 +64,8 @@ export interface formData {
   isGoodRestaurant: boolean;
   memo: string;
   name: string;
+  latitude?: number;
+  longitude?: number;
+  region1?: string;
+  region2?: string;
 }
