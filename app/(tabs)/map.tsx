@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import * as Location from "expo-location";
 import { WebView } from "react-native-webview";
-import { ActivityIndicator, Alert, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { BASE_URL } from "@/utils/config";
 
@@ -13,6 +19,8 @@ export default function Map() {
   } | null>(null);
 
   const [restaurant, setRestaurant] = useState([]);
+
+  const webviewRef = useRef(null);
 
   useEffect(() => {
     const restaurantFetch = async () => {
@@ -89,7 +97,6 @@ export default function Map() {
   }
 
   const KAKAO_JS_KEY = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
-  console.log(KAKAO_JS_KEY);
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -109,6 +116,7 @@ export default function Map() {
     <body>
       <div id="map"></div>
 <script>
+  var map;
   kakao.maps.load(function() {
   console.log("✅ Kakao maps.load 실행됨");
     var container = document.getElementById('map');
@@ -116,7 +124,7 @@ export default function Map() {
       center: new kakao.maps.LatLng(${currentLocation.lat}, ${currentLocation.lng}),
       level: 3
     };
-    var map = new kakao.maps.Map(container, options);
+    map = new kakao.maps.Map(container, options);
 
     // 현재 위치 마커
     var currentMarker = new kakao.maps.Marker({
@@ -142,7 +150,6 @@ export default function Map() {
               background: transparent;
               border: none;
               display: inline-block;
-              transform: translate(-50%, -100%);
             "
             onclick="window.ReactNativeWebView.postMessage('Marker clicked: \${markerInfo.name}')"
           >
@@ -155,7 +162,18 @@ export default function Map() {
       marker.setMap(map);
     });
   });
-</script>
+  document.addEventListener("message", function(event) {
+        try {
+          var msg = JSON.parse(event.data);
+          if (msg.type === "panTo" && map) {
+            var moveLatLon = new kakao.maps.LatLng(msg.lat, msg.lng);
+            map.panTo(moveLatLon);
+          }
+        } catch (e) {
+          console.log("메시지 처리 에러:", e);
+        }
+      });
+    </script>
     </body>
     </html>
   `;
@@ -164,9 +182,7 @@ export default function Map() {
     <View style={{ flex: 1 }}>
       <View className="w-full h-[50%]">
         <WebView
-          onConsoleMessage={(event) =>
-            console.log("WebView console:", event.nativeEvent.message)
-          }
+          ref={webviewRef}
           style={{ flex: 1 }}
           originWhitelist={["*"]}
           source={{ html: htmlContent }}
@@ -177,13 +193,22 @@ export default function Map() {
           onMessage={(event) => {
             Alert.alert("마커 클릭", event.nativeEvent.data);
           }}
-          onError={(syntheticEvent) => {
-            console.error("WebView error:", syntheticEvent.nativeEvent);
-          }}
-          onHttpError={(syntheticEvent) => {
-            console.error("WebView HTTP error:", syntheticEvent.nativeEvent);
-          }}
         />
+      </View>
+      <View className="w-full h-flex-1">
+        <TouchableOpacity
+          onPress={() => {
+            webviewRef.current.postMessage(
+              JSON.stringify({
+                type: "panTo",
+                lat: currentLocation?.lat,
+                lng: currentLocation?.lng,
+              })
+            );
+          }}
+        >
+          <Text>내 장소로 이동</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
