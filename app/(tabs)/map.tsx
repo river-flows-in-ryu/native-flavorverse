@@ -11,6 +11,10 @@ import {
 } from "react-native";
 
 import { BASE_URL } from "@/utils/config";
+import CustomHeader from "@/components/customHeader";
+import DistanceSelector from "../tabs/components/distanceSelector";
+
+import { Restaurant, RestaurantsApiResponse } from "@/types/restaurant";
 
 export default function Map() {
   const [currentLocation, setCurrentLocation] = useState<{
@@ -18,29 +22,38 @@ export default function Map() {
     lng: number;
   } | null>(null);
 
-  const [restaurant, setRestaurant] = useState([]);
+  const [restaurant, setRestaurant] = useState<Restaurant[]>([]);
+  const [statusCount, setStatusCount] = useState<{
+    goodCount: number;
+    badCount: number;
+  }>({
+    goodCount: 0,
+    badCount: 0,
+  });
+
+  const [distance, setDistance] = useState<number>(1000);
 
   const webviewRef = useRef(null);
 
-  useEffect(() => {
-    const restaurantFetch = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/api/restaurants/location`);
-        const resJson = await res.json();
-        const simplified = resJson?.restaurants.map((r) => ({
-          name: r.name,
-          lat: r.latitude,
-          lng: r.longitude,
-          status: r.status,
-        }));
-        setRestaurant(simplified);
-        console.log(simplified);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    restaurantFetch();
-  }, []);
+  // useEffect(() => {
+  //   const restaurantFetch = async () => {
+  //     try {
+  //       const res = await fetch(`${BASE_URL}/api/restaurants/location`);
+  //       const resJson = await res.json();
+  //       const simplified = resJson?.restaurants.map((r) => ({
+  //         name: r.name,
+  //         lat: r.latitude,
+  //         lng: r.longitude,
+  //         status: r.status,
+  //       }));
+  //       setRestaurant(simplified);
+  //       console.log(simplified);
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
+  //   restaurantFetch();
+  // }, []);
 
   const test = [
     {
@@ -87,6 +100,29 @@ export default function Map() {
       });
     })();
   }, []);
+
+  useEffect(() => {
+    if (!currentLocation) return;
+
+    const fetchRestaurants = async () => {
+      try {
+        const response = await fetch(
+          // `${BASE_URL}/api/restaurants/location?lat=${currentLocation.lat}&lng=${currentLocation.lng}`
+          `${BASE_URL}/api/restaurants/location?lat=37.4371&lng=127.1407&distance=${distance}`
+        );
+        const data = (await response.json()) as RestaurantsApiResponse;
+        console.log(data);
+        setRestaurant(data?.restaurants as Restaurant[]);
+        setStatusCount({
+          goodCount: data?.goodCount,
+          badCount: data?.badCount,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchRestaurants();
+  }, [currentLocation, distance]);
 
   if (!currentLocation) {
     return (
@@ -180,6 +216,7 @@ export default function Map() {
 
   return (
     <View style={{ flex: 1 }}>
+      <CustomHeader title="내 주변" />
       <View className="w-full h-[50%]">
         <WebView
           ref={webviewRef}
@@ -198,7 +235,7 @@ export default function Map() {
       <View className="w-full h-flex-1">
         <TouchableOpacity
           onPress={() => {
-            webviewRef.current.postMessage(
+            webviewRef?.current?.postMessage(
               JSON.stringify({
                 type: "panTo",
                 lat: currentLocation?.lat,
@@ -210,95 +247,17 @@ export default function Map() {
           <Text>내 장소로 이동</Text>
         </TouchableOpacity>
       </View>
+
+      <DistanceSelector distance={distance} setDistance={setDistance} />
+      <View className="flex-row justify-between">
+        <Text>
+          반경 {distance > 500 ? `${distance / 1000}km` : `${distance}m`} 내
+        </Text>
+        <View className="flex-row gap-4">
+          <Text>❤️ : {statusCount?.goodCount}개</Text>
+          <Text>❌ : {statusCount?.badCount}개</Text>
+        </View>
+      </View>
     </View>
   );
 }
-
-// import { WebView } from "react-native-webview";
-
-// const key = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
-
-// const html = `
-// <html>
-//     <head>
-//         <meta name="viewport" content="width=device-width, initial-scale=1">
-//         <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&libraries=services,clusterer,drawing"></script>
-//     </head>
-//     <body >
-//         <div id="map" style="width:500px;height:400px;"></div>
-//         <script type="text/javascript">
-//             (function () {
-//                 const container = document.getElementById('map'); //지도를 담을 영역의 DOM 레퍼런스
-//                 const options = { //지도를 생성할 때 필요한 기본 옵션
-//                     center: new kakao.maps.LatLng(33.450701, 126.570667), //지도의 중심좌표.
-//                     level: 3 //지도의 레벨(확대, 축소 정도)
-//                 };
-
-//                 const map = new kakao.maps.Map(container, options); //지도 생성 및 객체 리턴
-
-//                 // 주소-좌표 변환 객체를 생성합니다
-//                 const geocoder = new kakao.maps.services.Geocoder();
-//             })();
-//         </script>
-//     </body>
-// </html>
-// `;
-
-// export default function App() {
-//   return <WebView source={{ html: html }} />;
-// }
-
-// import { View } from "react-native";
-// import { WebView } from "react-native-webview";
-
-// const KAKAO_KEY = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
-
-// const html = `
-// <!DOCTYPE html>
-// <html>
-//   <head>
-//     <meta name="viewport" content="width=device-width, initial-scale=1">
-//     <meta charset="utf-8">
-//     <style>
-//       html, body { margin:0; padding:0; width:100%; height:100%; }
-//       #map { width:100%; height:100%; }
-//     </style>
-//     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=80b48adb449695d5b5f0f0d20cb01ac5&libraries=services,clusterer,drawing"></script>
-//   </head>
-//   <body>
-//     <div id="map"></div>
-//     <script>
-//       // SDK가 준비될 때까지 기다리기
-//       kakao.maps.load(function() {
-//         var container = document.getElementById('map');
-//         var options = {
-//           center: new kakao.maps.LatLng(33.450701, 126.570667),
-//           level: 3
-//         };
-//         var map = new kakao.maps.Map(container, options);
-
-//         // 현재 위치 마커
-//         var marker = new kakao.maps.Marker({
-//           position: new kakao.maps.LatLng(33.450701, 126.570667),
-//           title: '현재 위치'
-//         });
-//         marker.setMap(map);
-//       });
-//     </script>
-//   </body>
-// </html>
-// `;
-
-// export default function App() {
-//   return (
-//     <View className="w-full h-[50%]">
-//       <WebView
-//         originWhitelist={["*"]}
-//         source={{ html }}
-//         javaScriptEnabled
-//         domStorageEnabled
-//         style={{ flex: 1 }}
-//       />
-//     </View>
-//   );
-// }
