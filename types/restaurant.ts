@@ -31,6 +31,8 @@ export interface Restaurant {
   subregion: {
     name: string;
   };
+  lat: number;
+  lng: number;
 }
 
 export type RestaurantsApiResponse = {

@@ -62,7 +62,7 @@ export default function Map() {
       subregion: {
         name: "성남",
       },
-      memo: "ㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏ",
+      memo: "새우로제파스타 존맛집",
     },
     {
       lat: 37.44202657754082,
@@ -78,7 +78,7 @@ export default function Map() {
       subregion: {
         name: "성남",
       },
-      memo: "ㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏzzzzzzzzzzzzzzzzzzzzzzzzzzzzㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏ",
+      memo: "감자채전이 존맛 닭볶음탕보다는 고추장찌개가 맛있음",
     },
     {
       lat: 37.4053564197474,
@@ -94,7 +94,7 @@ export default function Map() {
       subregion: {
         name: "여주",
       },
-      memo: "ㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏ",
+      memo: "브런치 돈 아깝,돈까스 소스 이상",
     },
     {
       lat: 37.3329615377854,
@@ -110,7 +110,7 @@ export default function Map() {
       subregion: {
         name: "용인",
       },
-      memo: "ㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏㅏ",
+      memo: "존맛탱 여기가 갈매기살 최고임  마늘먹고 다들 사람행",
     },
   ];
 
@@ -138,9 +138,13 @@ export default function Map() {
 
     const fetchRestaurants = async () => {
       try {
+        const statusFilters: string[] = [];
+        if (goodFlag) statusFilters.push("good");
+        if (badFlag) statusFilters.push("bad");
+
         const response = await fetch(
           // `${BASE_URL}/api/restaurants/location?lat=${currentLocation.lat}&lng=${currentLocation.lng}`
-          `${BASE_URL}/api/restaurants/location?lat=37.4371&lng=127.1407&distance=${distance}`
+          `${BASE_URL}/api/restaurants/location?lat=37.4371&lng=127.1407&distance=${distance}&filter=${statusFilters.join(",")}`
         );
         const data = (await response.json()) as RestaurantsApiResponse;
         console.log(data);
@@ -154,7 +158,9 @@ export default function Map() {
       }
     };
     fetchRestaurants();
-  }, [currentLocation, distance]);
+  }, [currentLocation, distance, goodFlag, badFlag]);
+
+  console.log(restaurant);
 
   if (!currentLocation) {
     return (
@@ -210,9 +216,9 @@ export default function Map() {
   };
 
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <CustomHeader title="내 주변" />
-      <View className="w-full h-[50%]">
+      <View className="w-full h-[300px]">
         <WebView
           ref={webviewRef}
           style={{ flex: 1 }}
@@ -233,64 +239,79 @@ export default function Map() {
         />
       </View>
 
-      <View className="p-4 border-b border-gray-200">
-        <DistanceSelector distance={distance} setDistance={setDistance} />
-        <View className="flex-row justify-between mt-4">
-          <Text>
-            반경 {distance > 500 ? `${distance / 1000}km` : `${distance}m`} 내
-          </Text>
-          <View className="flex-row gap-4">
-            <Text>❤️ : {statusCount?.goodCount || 0}개</Text>
-            <Text>❌ : {statusCount?.badCount || 0}개</Text>
+      <ScrollView className="">
+        <View className="p-4 border-b border-gray-200">
+          <DistanceSelector distance={distance} setDistance={setDistance} />
+          <View className="flex-row justify-between mt-4">
+            <Text>
+              반경 {distance > 500 ? `${distance / 1000}km` : `${distance}m`} 내
+            </Text>
+            <View className="flex-row gap-4">
+              <Text>❤️ : {statusCount?.goodCount || 0}개</Text>
+              <Text>❌ : {statusCount?.badCount || 0}개</Text>
+            </View>
+          </View>
+
+          <View className="flex-row gap-3 mt-4">
+            <TouchableOpacity
+              onPress={() => setGoodFlag((prev) => !prev)}
+              className={`cursor-pointer border rounded-xl ${goodFlag ? "bg-green-100  border-green-200" : "bg-gray-100 border-gray-200 "}`}
+            >
+              <Text
+                className={`px-4 py-2 text-sm ${goodFlag ? "text-green-700" : "ext-gray-500"}`}
+              >
+                ❤️ 맛집
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setBadFlag((prev) => !prev)}
+              className={`cursor-pointer border rounded-xl ${badFlag ? "bg-red-100  border-red-200" : "bg-gray-100 border-gray-200 "}`}
+            >
+              <Text
+                className={`px-4 py-2 text-sm ${badFlag ? "text-red-700" : "ext-gray-500"}`}
+              >
+                ❌ 노맛집
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        <View className="flex-row gap-3 mt-4">
-          <TouchableOpacity
-            onPress={() => setGoodFlag((prev) => !prev)}
-            className={`cursor-pointer border rounded-xl ${goodFlag ? "bg-green-100  border-green-200" : "bg-gray-100 border-gray-200 "}`}
-          >
-            <Text
-              className={`px-4 py-2 text-sm ${goodFlag ? "text-green-700" : "ext-gray-500"}`}
-            >
-              ❤️ 맛집
+        {test?.length !== 0 ? (
+          <View className="flex-1 p-4 ">
+            <Text className="text-lg font-bold text-black">
+              가까운 맛집 / 노맛집
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setBadFlag((prev) => !prev)}
-            className={`cursor-pointer border rounded-xl ${badFlag ? "bg-red-100  border-red-200" : "bg-gray-100 border-gray-200 "}`}
-          >
-            <Text
-              className={`px-4 py-2 text-sm ${badFlag ? "text-red-700" : "ext-gray-500"}`}
-            >
-              ❌ 노맛집
+            <FlatList
+              data={test}
+              scrollEnabled={false}
+              renderItem={(
+                { item } //
+              ) => (
+                <RestaurantItem
+                  item={item}
+                  webviewRef={webviewRef}
+                  setCurrentLocation={setCurrentLocation}
+                />
+              )}
+            />
+          </View>
+        ) : (
+          <View className="p-4">
+            <Text className="text-lg font-bold text-black mb-3">
+              가까운 맛집
             </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      {/* <View className="p-4">
-        <Text className="text-lg font-bold text-black mb-3">가까운 맛집</Text>
-        <View className="py-8 flex-col justify-center items-center">
-          <Feather name="map-pin" size={48} color="gray" />
-          <Text className="mt-2 text-gray-500 text-center">
-            주변에 등록된 맛집이 없습니다
-          </Text>
-          <Text className="text-gray-400 text-sm text-center mt-1">
-            반경을 늘려보거나 새로운 맛집을 추가해보세요
-          </Text>
-        </View>
-      </View> */}
-      <View className="flex-1 p-4 ">
-        <Text className="text-lg font-bold text-black">
-          가까운 맛집 / 노맛집
-        </Text>
-        <FlatList
-          data={test}
-          renderItem={(
-            { item } //
-          ) => <RestaurantItem item={item} />}
-        />
-      </View>
-    </ScrollView>
+            <View className="py-8 flex-col justify-center items-center">
+              <Feather name="map-pin" size={48} color="gray" />
+              <Text className="mt-2 text-gray-500 text-center">
+                주변에 등록된 맛집이 없습니다
+              </Text>
+              <Text className="text-gray-400 text-sm text-center mt-1">
+                반경을 늘려보거나 새로운 맛집을 추가해보세요
+              </Text>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }

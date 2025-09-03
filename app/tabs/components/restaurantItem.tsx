@@ -1,6 +1,7 @@
-import React from "react";
+import React, { MutableRefObject } from "react";
 
 import { Text, TouchableOpacity, View } from "react-native";
+import WebView from "react-native-webview";
 
 import { Restaurant } from "@/types/restaurant";
 
@@ -9,10 +10,26 @@ import Feather from "@expo/vector-icons/Feather";
 
 interface Props {
   item: Restaurant;
+  setCurrentLocation: (location: { lat: number; lng: number }) => void;
+  webviewRef: MutableRefObject<WebView | null>;
 }
 
-export default function RestaurantItem({ item }: Props) {
-  const { status, name, category, region, subregion, memo } = item;
+export default function RestaurantItem({
+  item,
+  setCurrentLocation,
+  webviewRef,
+}: Props) {
+  const {
+    status,
+    name,
+    category,
+    region,
+    subregion,
+    memo,
+    lat,
+    lng,
+    distance,
+  } = item;
   const { name: categoryName } = category;
   const { name: regionName } = region;
   const { name: subreegionName } = subregion;
@@ -34,7 +51,7 @@ export default function RestaurantItem({ item }: Props) {
         <View className="flex-row items-center gap-2 mb-1">
           <Text className="font-semibold text-black truncate">{name}</Text>
           <View className="px-2 py-0.5 bg-gray-200 rounded-full">
-            <Text className="text-xs text-gray-600">{categoryName}</Text>{" "}
+            <Text className="text-xs text-gray-600">{categoryName}</Text>
           </View>
         </View>
         <Text className="text-xs text-gray-500 mb-1">
@@ -49,8 +66,27 @@ export default function RestaurantItem({ item }: Props) {
         </Text>
       </View>
       <View className="flex-col  gap-2">
-        <Text className="text-sm text-right font-bold text-black">120m</Text>
-        <TouchableOpacity className="flex-row gap-1 px-2 py-1 bg-blue-100 rounded-lg">
+        <Text className="text-sm text-right font-bold text-black">
+          {distance > 1
+            ? `${distance.toFixed(2)} km`
+            : `${Math.round(distance * 1000)} m`}
+        </Text>
+        <TouchableOpacity
+          onPress={() => {
+            // 1️⃣ 지도 중심 갱신
+            setCurrentLocation({ lat: lat, lng: lng });
+
+            // 2️⃣ WebView에 panTo 메시지 전송
+            webviewRef.current?.postMessage(
+              JSON.stringify({
+                type: "panTo",
+                lat: lat,
+                lng: lng,
+              })
+            );
+          }}
+          className="flex-row gap-1 px-2 py-1 bg-blue-100 rounded-lg"
+        >
           <Feather name="map-pin" size={12} color="blue" />
           <Text className="text-xs text-blue-600">지도</Text>
         </TouchableOpacity>

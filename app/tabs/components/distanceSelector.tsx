@@ -10,7 +10,7 @@ export default function DistanceSelector({ distance, setDistance }: Props) {
   return (
     <View className="flex-row justify-between">
       <Text>검색 반경</Text>
-      <View className="flex-row">
+      <View className="flex-row gap-2">
         <TouchableOpacity
           onPress={() => setDistance(500)}
           className={`px-3 py-1 rounded-lg  ${distance === 500 ? "bg-black" : "bg-gray-100 "}`}
