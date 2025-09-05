@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import * as Location from "expo-location";
-import { WebView } from "react-native-webview";
+import { WebView, WebViewMessageEvent } from "react-native-webview";
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +25,15 @@ import RestaurantItem from "../tabs/components/restaurantItem";
 
 const KAKAO_JS_KEY = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
 
+type HandlerMap = {
+  markerClick: (payload: any) => void;
+  recenter: () => void | Promise<void>;
+};
+
+type Message =
+  | { type: "markerClick"; payload: any }
+  | { type: "recenter"; payload?: undefined };
+
 export default function Map() {
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
@@ -45,7 +54,7 @@ export default function Map() {
   const [goodFlag, setGoodFlag] = useState(true);
   const [badFlag, setBadFlag] = useState(true);
 
-  const webviewRef = useRef(null);
+  const webviewRef = useRef<WebView>(null);
 
   const test = [
     {
@@ -170,7 +179,7 @@ export default function Map() {
     );
   }
 
-  const handleMarkerClick = (payload) => {
+  const handleMarkerClick = (payload: any) => {
     Alert.alert("마커 클릭", payload.name);
   };
 
@@ -201,14 +210,14 @@ export default function Map() {
     }
   };
 
-  const handlers = {
+  const handlers: HandlerMap = {
     markerClick: handleMarkerClick,
     recenter: handleRecenter,
   };
 
-  const onMessage = (event) => {
+  const onMessage = (event: WebViewMessageEvent) => {
     try {
-      const msg = JSON.parse(event.nativeEvent.data);
+      const msg: Message = JSON.parse(event.nativeEvent.data);
       handlers[msg.type]?.(msg.payload ?? {});
     } catch (error) {
       console.error("webview 메시지 처리 오류", error);

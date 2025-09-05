@@ -67,9 +67,9 @@ export default function RestaurantItem({
       </View>
       <View className="flex-col  gap-2">
         <Text className="text-sm text-right font-bold text-black">
-          {distance > 1
-            ? `${distance.toFixed(2)} km`
-            : `${Math.round(distance * 1000)} m`}
+          {(distance ?? 0) > 1
+            ? `${(distance ?? 1).toFixed(2)} km`
+            : `${Math.round((distance ?? 1) * 1000)} m`}
         </Text>
         <TouchableOpacity
           onPress={() => {
