@@ -14,14 +14,14 @@ export interface restaurantsStatusCount {
 }
 
 export interface Restaurant {
-  id: number;
+  id?: number;
   name: string;
-  address: string;
+  address?: string;
   memo: string;
-  categoryId: number;
-  regionId: number;
-  subregionId: number;
-  status: "BAD" | "GOOD";
+  categoryId?: number;
+  regionId?: number;
+  subregionId?: number;
+  status: "BAD" | "GOOD" | string;
   category: {
     name: string;
   };
@@ -31,6 +31,9 @@ export interface Restaurant {
   subregion: {
     name: string;
   };
+  lat: number;
+  lng: number;
+  distance?: number;
 }
 
 export type RestaurantsApiResponse = {
@@ -64,4 +67,8 @@ export interface formData {
   isGoodRestaurant: boolean;
   memo: string;
   name: string;
+  latitude?: number;
+  longitude?: number;
+  region1?: string;
+  region2?: string;
 }

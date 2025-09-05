@@ -117,6 +117,11 @@ export default function Form() {
       address: selectedRestaurant?.address_name || address,
     };
 
+    if (selectedRestaurant) {
+      data.latitude = Number(selectedRestaurant.y);
+      data.longitude = Number(selectedRestaurant.x);
+    }
+
     try {
       const url = isEdit
         ? `${BASE_URL}/api/restaurants/${id}`
@@ -133,7 +138,6 @@ export default function Form() {
       });
 
       const resJson = await res.json();
-      console.log(resJson);
     } catch (error) {
       console.log(error);
     }

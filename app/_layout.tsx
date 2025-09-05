@@ -26,11 +26,19 @@ export default function RootLayout() {
     return null;
   }
 
+  const MyTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: "#fff", // 강제로 흰색
+    },
+  };
+
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : MyTheme}>
       <PaperProvider>
         <SafeAreaProvider>
-          <SafeAreaView className="flex-1 bg-white">
+          <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
             <Slot />
           </SafeAreaView>
           <StatusBar style={Platform.OS === "ios" ? "dark" : "auto"} />

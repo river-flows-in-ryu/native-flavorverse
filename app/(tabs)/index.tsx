@@ -14,10 +14,13 @@ import SelectDropdown from "react-native-select-dropdown";
 
 import { BASE_URL } from "@/utils/config";
 
+import Pagination from "@/components/pagination";
 import RestaurantItem from "@/components/restaurantItem";
 import RestaurantDeleteDialog from "@/components/restaurantDeleteDialog";
-
-import "../../global.css";
+import SearchBar from "../tabs/components/searchBar";
+import RegionFilter from "../tabs/components/regionFilter";
+import TasteFilterToggle from "../tabs/components/tasteFilterToggle";
+import FoodCategorySelector from "../tabs/components/foodCategorySelector";
 
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
@@ -28,12 +31,10 @@ import {
   Restaurant,
   RestaurantsApiResponse,
 } from "@/types/restaurant";
-import SearchBar from "./components/searchBar";
-import RegionFilter from "./components/regionFilter";
-import TasteFilterToggle from "./components/tasteFilterToggle";
-import FoodCategorySelector from "./components/foodCategorySelector";
 
 import AntDesign from "@expo/vector-icons/AntDesign";
+
+import "../../global.css";
 
 export default function HomeScreen() {
   const [regionData, setRegionData] = useState<[] | RegionData[]>([]);
@@ -61,6 +62,8 @@ export default function HomeScreen() {
 
   const [isDialogVisible, setIsDialogVisible] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+
+  const [page, setPage] = useState<number>(1);
 
   const regionDropdownRef = useRef<InstanceType<typeof SelectDropdown>>(null);
   const subRegionDropdownRef =
@@ -308,15 +311,26 @@ export default function HomeScreen() {
 
         <View className=" h-[300px] px-4 pb-4">
           <FlatList
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item, index) => (item.id ?? index).toString()}
             data={restaurantData}
             renderItem={({ item }) => (
               <RestaurantItem
                 item={item}
-                onDelete={() => handleClickDelete(item.id)}
+                onDelete={() => {
+                  if (item.id !== undefined) {
+                    handleClickDelete(item.id);
+                  }
+                }}
               />
             )}
           ></FlatList>
+        </View>
+        <View className="flex-1 flex-row justify-center">
+          <Pagination
+            currentPage={page}
+            totalItems={90}
+            onPageChange={setPage}
+          />
         </View>
 
         <View className="flex flex-row"></View>
